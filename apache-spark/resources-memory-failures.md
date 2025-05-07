@@ -127,7 +127,7 @@ You can gather some information about memory overhead inspecting the GC logs by 
 Then you can calculate the total memory required as `Per-executor memory + overhead` and adjust container sizing and resource requests by tuning `executor-memory` and `spark.yarn.executor.memoryOverhead=<number-of-gigabytes>g`.
 
 **Default behavior**: If not specified, Spark sets this value to either: 10% of executor memory or 384MB.
-## Dynamic Allocation Issues | TODO: not enough information, meaning of dynamicAllocation parameters 
+## Dynamic Allocation Issues 
 Dynamic allocation may not scale up quickly enough for bursty workloads or may not request enough resources.
 
 ```
@@ -147,6 +147,41 @@ spark = SparkSession.builder \
     .config("spark.dynamicAllocation.schedulerBacklogTimeout", "30s") \
     .getOrCreate()
 ```
+##### Parameters description
+- ```spark.dynamicAllocation.enabled```  
+  Enables or disables dynamic allocation of executors.  
+  ***Values: true or false (default: false)  
+  Note: You must also enable spark.shuffle.service.enabled (set to true) when using YARN or Standalone.***
+
+- ```spark.dynamicAllocation.minExecutors```  
+	The minimum number of executors the application will maintain.  
+	***Default: 0*** 
+
+- ```spark.dynamicAllocation.maxExecutors```  
+	The maximum number of executors the application can request.  
+	***Default: unlimited (Int.MaxValue)***
+
+- ```spark.dynamicAllocation.initialExecutors```
+The number of executors to start with when the application launches.  
+***Default: equal to minExecutors  
+Note: If spark.executor.instances or --num-executors is set and greater, that will be used instead.***
+
+- ```spark.dynamicAllocation.executorIdleTimeout```  
+How long (in seconds) an executor can be idle before it is removed.  
+***Default: 60s***
+
+- ```spark.dynamicAllocation.schedulerBacklogTimeout```  
+How long (in seconds) tasks must remain pending before requesting new executors.  
+***Default: 1s***
+
+- ```spark.dynamicAllocation.sustainedSchedulerBacklogTimeout```  
+The interval (in seconds) between subsequent executor requests if the backlog continues.  
+***Default: same as schedulerBacklogTimeout***
+
+- ```spark.dynamicAllocation.executorAllocationRatio```  
+Scaling factor for how many executors to request relative to task parallelism.  
+***Default: 1.0 (match full parallelism)  
+Note: Set to a lower value (e.g., 0.5) to reduce resource usage in jobs with small tasks.***
 
 ## Memory Leaks
 Memory usage grows continuously over time, eventually leading to OOM errors.
